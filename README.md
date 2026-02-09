@@ -52,8 +52,9 @@ This is intentionally opinionated. The goal is correctness and reliability over 
 
 ### High-level Flow (Mermaid)
 
-> GitHub renders Mermaid diagrams automatically in README.md.
+> GitHub renders Mermaid diagrams automatically in `README.md`.
 
+```mermaid
 flowchart TD
   A["Source Database\n(SQLite / Postgres / MySQL)"] --> B["Schema Scanner\n(SQLAlchemy Inspector)"]
   B --> C["Transformer\n(Standardized Data Dictionary Model)"]
@@ -61,11 +62,11 @@ flowchart TD
   D --> E["FastAPI Service\n(/scan, /jobs, /dictionary)"]
   E --> F["Consumers\n(Catalog / Governance / Analytics)"]
   E --> G["Ops Utilities\n(logging, cleanup, disk monitor)"]
+```
 
+### Component View (Mermaid)
 
-### Component View
-
-```***mermaid***
+```mermaid
 flowchart LR
   subgraph API["FastAPI Layer"]
     R1["POST /scan/trigger"]
@@ -94,9 +95,7 @@ flowchart LR
   TX --> MDB
   R2 --> MDB
   R3 --> MDB
-
-
-
+```
 
 ---
 
@@ -128,9 +127,7 @@ python -m uvicorn mgt.api.app:app --reload
 ```
 
 Open Swagger UI:
-```
-http://127.0.0.1:8000/docs
-```
+- http://127.0.0.1:8000/docs
 
 ---
 
@@ -162,6 +159,33 @@ curl "http://127.0.0.1:8000/dictionary?limit=20"
 
 Returns normalized metadata records (one row per column per object).  
 Re-running scans will **update existing entries**, not duplicate them.
+
+---
+
+## Screenshots (Recruiter-friendly)
+
+Create this folder and add PNGs:
+- `docs/images/`
+
+Recommended files:
+- `docs/images/swagger-ui.png`
+- `docs/images/trigger-scan.png`
+- `docs/images/jobs.png`
+- `docs/images/dictionary.png`
+
+Once you commit those files, they will render here:
+
+**Swagger UI**
+![Swagger UI](docs/images/swagger-ui.png)
+
+**Trigger Scan**
+![Trigger Scan](docs/images/trigger-scan.png)
+
+**Jobs**
+![Jobs](docs/images/jobs.png)
+
+**Data Dictionary**
+![Data Dictionary](docs/images/dictionary.png)
 
 ---
 
@@ -199,52 +223,6 @@ This repository includes:
 - Explicit dependency management
 
 The intent is to keep the project runnable, verifiable, and reviewable at any point in time.
-
----
-
-## Recommended Screenshots (Recruiter-friendly)
-
-Create a folder in the repo:
-```
-docs/images/
-```
-
-Add these images (PNG is best), then reference them in this README:
-
-1) **Swagger UI overview**  
-   - File: `docs/images/swagger-ui.png`  
-   - Where to capture: open `http://127.0.0.1:8000/docs` and screenshot the top of the page showing endpoints list.
-
-2) **Trigger scan response**  
-   - File: `docs/images/trigger-scan.png`  
-   - Where to capture: Swagger → `POST /scan/trigger` → Execute → screenshot response body with `job_id`.
-
-3) **Jobs list**  
-   - File: `docs/images/jobs.png`  
-   - Where to capture: Swagger → `GET /jobs` → Execute → screenshot showing `SUCCESS` and timestamps.
-
-4) **Dictionary output**  
-   - File: `docs/images/dictionary.png`  
-   - Where to capture: Swagger → `GET /dictionary` → Execute → screenshot of a few rows.
-
-After you add the images, paste this block right below the “API Walkthrough” section:
-
-```md
-### Screenshots
-
-**Swagger UI**
-![Swagger UI](docs/images/swagger-ui.png)
-
-**Trigger Scan**
-![Trigger Scan](docs/images/trigger-scan.png)
-
-**Jobs**
-![Jobs](docs/images/jobs.png)
-
-**Data Dictionary**
-![Data Dictionary](docs/images/dictionary.png)
-
-
 
 ---
 
