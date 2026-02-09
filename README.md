@@ -54,38 +54,37 @@ This is intentionally opinionated. The goal is correctness and reliability over 
 
 > GitHub renders Mermaid diagrams automatically in README.md.
 
-```mermaid
 flowchart TD
-  A[Source Database<br/>(SQLite / Postgres / MySQL)] --> B[Schema Scanner<br/>(SQLAlchemy Inspector)]
-  B --> C[Transformer<br/>(Standardized Data Dictionary Model)]
-  C --> D[MetaDB<br/>(Idempotent Upserts via Hash Keys)]
-  D --> E[FastAPI Service<br/>(/scan, /jobs, /dictionary)]
-  E --> F[Consumers<br/>(Catalog / Governance / Analytics)]
-  E --> G[Ops Utilities<br/>(logging, cleanup, disk monitor)]
-```
+  A["Source Database\n(SQLite / Postgres / MySQL)"] --> B["Schema Scanner\n(SQLAlchemy Inspector)"]
+  B --> C["Transformer\n(Standardized Data Dictionary Model)"]
+  C --> D["MetaDB\n(Idempotent Upserts via Hash Keys)"]
+  D --> E["FastAPI Service\n(/scan, /jobs, /dictionary)"]
+  E --> F["Consumers\n(Catalog / Governance / Analytics)"]
+  E --> G["Ops Utilities\n(logging, cleanup, disk monitor)"]
 
-### Component View (Mermaid)
 
-```mermaid
+### Component View
+
+```***mermaid***
 flowchart LR
-  subgraph API[FastAPI Layer]
-    R1[/POST /scan/trigger/]
-    R2[/GET /jobs/]
-    R3[/GET /dictionary/]
+  subgraph API["FastAPI Layer"]
+    R1["POST /scan/trigger"]
+    R2["GET /jobs"]
+    R3["GET /dictionary"]
   end
 
-  subgraph Core[Core Runtime]
-    JR[Job Runner]
-    TX[Transformer]
+  subgraph Core["Core Runtime"]
+    JR["Job Runner"]
+    TX["Transformer"]
   end
 
-  subgraph Scan[Scanning]
-    SC[SQLAlchemy Scanner]
+  subgraph Scan["Scanning"]
+    SC["SQLAlchemy Scanner"]
   end
 
-  subgraph Store[Storage]
-    MDB[(MetaDB SQLite)]
-    SDB[(Source DB)]
+  subgraph Store["Storage"]
+    MDB["MetaDB (SQLite)"]
+    SDB["Source DB"]
   end
 
   R1 --> JR
@@ -95,7 +94,9 @@ flowchart LR
   TX --> MDB
   R2 --> MDB
   R3 --> MDB
-```
+
+
+
 
 ---
 
@@ -242,7 +243,8 @@ After you add the images, paste this block right below the “API Walkthrough”
 
 **Data Dictionary**
 ![Data Dictionary](docs/images/dictionary.png)
-```
+
+
 
 ---
 
