@@ -162,7 +162,7 @@ Re-running scans will **update existing entries**, not duplicate them.
 
 ---
 
-## Screenshots (Recruiter-friendly)
+## Screenshots 
 
 Create this folder and add PNGs:
 - `docs/images/`
