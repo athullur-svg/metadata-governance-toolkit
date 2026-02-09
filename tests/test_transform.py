@@ -1,5 +1,5 @@
-from src.mgt.transform.data_dictionary import to_data_dictionary_rows
-from src.mgt.scanning.sqlalchemy_scanner import ColumnMeta
+from mgt.transform.data_dictionary import to_data_dictionary_rows
+from mgt.scanning.sqlalchemy_scanner import ColumnMeta
 
 def test_transform_to_dictionary_rows():
     cols = [
