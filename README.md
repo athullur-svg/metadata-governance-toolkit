@@ -1,37 +1,264 @@
 # Metadata Governance Toolkit
 
-This repository represents my approach to building metadata governance systems the way they
-should exist in real production environments — opinionated, reliable, and operationally sound.
+A production-minded metadata governance service built in Python to scan database schemas, normalize metadata into a standardized data dictionary, and persist it reliably using idempotent, hash-driven ingestion patterns.
 
-The toolkit is designed to scan database schemas, normalize metadata into a standardized data
-dictionary, and persist it using idempotent, hash-driven patterns that eliminate duplication
-and inconsistency. It exposes REST APIs to orchestrate ingestion jobs and includes operational
-guardrails such as job tracking, logging, disk monitoring, and cleanup routines.
+This project reflects how I design and reason about metadata systems after working extensively with enterprise data platforms—where correctness, repeatability, and operational resilience are non-negotiable.
 
-This project reflects how I design systems after working extensively with enterprise data
-platforms, where metadata accuracy, repeatability, and operational resilience are non-negotiable.
+The goal is not to demonstrate a framework, but to model how a **real metadata ingestion service behaves in production** when run repeatedly, monitored, and trusted by downstream consumers.
 
+---
+
+## Why This Exists
+
+In most data platforms, metadata is treated as a by-product rather than a first-class asset.  
+That leads to duplication, drift, inconsistent catalogs, and brittle governance workflows.
+
+This toolkit is built on the belief that:
+- Metadata ingestion must be **deterministic**
+- Re-runs should be **safe and idempotent**
+- Failures should be **observable and debuggable**
+- Local development should be **frictionless**, with a clear path to scale
+
+Everything in this repository follows those principles.
+
+---
 
 ## Design Philosophy
 
-I built this project with the belief that metadata is not a side artifact — it is a first-class
-asset of any data platform.
+Every design decision mirrors patterns I use in production systems:
 
-Every design decision here follows principles I use in production:
-- Deterministic ingestion using hash-based idempotency
-- Clear separation between scanning, transformation, and persistence
-- Explicit job lifecycle tracking for observability and failure analysis
-- Operational hygiene through log rotation, cleanup, and disk thresholds
-- Simple local-first setup with a clear path to scale across environments
+- **Idempotent ingestion** using stable hash keys to prevent duplication
+- **Clear separation of concerns** between scanning, transformation, and persistence
+- **Explicit job lifecycle tracking** for observability and failure analysis
+- **Operational hygiene** through logging, disk monitoring, and cleanup routines
+- **Local-first defaults** with environment-driven configuration for real databases
 
-The goal was not to build a demo, but to model how a real metadata ingestion service behaves
-when run repeatedly, monitored, and trusted by downstream systems.
+This is intentionally opinionated. The goal is correctness and reliability over convenience.
+
+---
 
 ## What This Project Demonstrates
 
-- Strong Python system design beyond scripts and notebooks
-- Experience with metadata ingestion and governance workflows
-- Idempotent persistence patterns using stable hash keys
-- API-driven orchestration and job execution modeling
-- Operational awareness (logging, monitoring, cleanup)
-- Production-oriented coding practices with extensibility in mind
+- Production-grade Python system design beyond scripts and notebooks
+- Hands-on experience with metadata ingestion and governance workflows
+- Safe, repeatable persistence using hash-based upsert strategies
+- API-driven orchestration with clear execution semantics
+- Operational awareness (logging, monitoring, cleanup, failure visibility)
+- Extensible architecture suitable for real enterprise integrations
+
+---
+
+## Architecture
+
+### High-level Flow (Mermaid)
+
+> GitHub renders Mermaid diagrams automatically in README.md.
+
+```mermaid
+flowchart TD
+  A[Source Database<br/>(SQLite / Postgres / MySQL)] --> B[Schema Scanner<br/>(SQLAlchemy Inspector)]
+  B --> C[Transformer<br/>(Standardized Data Dictionary Model)]
+  C --> D[MetaDB<br/>(Idempotent Upserts via Hash Keys)]
+  D --> E[FastAPI Service<br/>(/scan, /jobs, /dictionary)]
+  E --> F[Consumers<br/>(Catalog / Governance / Analytics)]
+  E --> G[Ops Utilities<br/>(logging, cleanup, disk monitor)]
+```
+
+### Component View (Mermaid)
+
+```mermaid
+flowchart LR
+  subgraph API[FastAPI Layer]
+    R1[/POST /scan/trigger/]
+    R2[/GET /jobs/]
+    R3[/GET /dictionary/]
+  end
+
+  subgraph Core[Core Runtime]
+    JR[Job Runner]
+    TX[Transformer]
+  end
+
+  subgraph Scan[Scanning]
+    SC[SQLAlchemy Scanner]
+  end
+
+  subgraph Store[Storage]
+    MDB[(MetaDB SQLite)]
+    SDB[(Source DB)]
+  end
+
+  R1 --> JR
+  JR --> SC
+  SC --> SDB
+  JR --> TX
+  TX --> MDB
+  R2 --> MDB
+  R3 --> MDB
+```
+
+---
+
+## Quickstart (Local)
+
+The project defaults to a **local SQLite setup** for zero-friction onboarding.  
+No external database is required to run or evaluate the system.
+
+### Prerequisites
+- Python 3.12+
+
+### Setup
+
+```bash
+git clone <your-repo-url>
+cd metadata-governance-toolkit
+
+python -m venv .venv
+source .venv/bin/activate
+
+pip install .
+mkdir -p .metadb
+```
+
+### Start the API
+
+```bash
+python -m uvicorn mgt.api.app:app --reload
+```
+
+Open Swagger UI:
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## API Walkthrough
+
+### Health Check
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+### Trigger a Metadata Scan
+```bash
+curl -X POST http://127.0.0.1:8000/scan/trigger
+```
+
+This scans the source database schema and persists results into MetaDB using idempotent logic.
+
+### View Job History
+```bash
+curl "http://127.0.0.1:8000/jobs?limit=10"
+```
+
+Returns execution status, timestamps, and error details (if any).
+
+### Query the Data Dictionary
+```bash
+curl "http://127.0.0.1:8000/dictionary?limit=20"
+```
+
+Returns normalized metadata records (one row per column per object).  
+Re-running scans will **update existing entries**, not duplicate them.
+
+---
+
+## Docker
+
+```bash
+docker build -t metadata-governance-toolkit .
+docker run -p 8000:8000 metadata-governance-toolkit
+```
+
+---
+
+## Configuration
+
+All configuration is environment-driven.
+
+Example (`.env.example`):
+
+```env
+META_DB_URL=sqlite:///./.metadb/metadb.sqlite
+SOURCE_DB_URL=sqlite:///./.metadb/source_demo.sqlite
+LOG_LEVEL=INFO
+```
+
+The local SQLite setup is intended for development.  
+The same code path supports Postgres or other relational databases via SQLAlchemy.
+
+---
+
+## CI & Quality
+
+This repository includes:
+- Automated test execution via GitHub Actions
+- Clean packaging using a src-layout
+- Explicit dependency management
+
+The intent is to keep the project runnable, verifiable, and reviewable at any point in time.
+
+---
+
+## Recommended Screenshots (Recruiter-friendly)
+
+Create a folder in the repo:
+```
+docs/images/
+```
+
+Add these images (PNG is best), then reference them in this README:
+
+1) **Swagger UI overview**  
+   - File: `docs/images/swagger-ui.png`  
+   - Where to capture: open `http://127.0.0.1:8000/docs` and screenshot the top of the page showing endpoints list.
+
+2) **Trigger scan response**  
+   - File: `docs/images/trigger-scan.png`  
+   - Where to capture: Swagger → `POST /scan/trigger` → Execute → screenshot response body with `job_id`.
+
+3) **Jobs list**  
+   - File: `docs/images/jobs.png`  
+   - Where to capture: Swagger → `GET /jobs` → Execute → screenshot showing `SUCCESS` and timestamps.
+
+4) **Dictionary output**  
+   - File: `docs/images/dictionary.png`  
+   - Where to capture: Swagger → `GET /dictionary` → Execute → screenshot of a few rows.
+
+After you add the images, paste this block right below the “API Walkthrough” section:
+
+```md
+### Screenshots
+
+**Swagger UI**
+![Swagger UI](docs/images/swagger-ui.png)
+
+**Trigger Scan**
+![Trigger Scan](docs/images/trigger-scan.png)
+
+**Jobs**
+![Jobs](docs/images/jobs.png)
+
+**Data Dictionary**
+![Data Dictionary](docs/images/dictionary.png)
+```
+
+---
+
+## Notes
+
+- Runtime data (`.metadb/`, logs, SQLite files) is intentionally excluded from version control
+- The demo database is auto-created locally to keep onboarding simple
+- The architecture is designed to extend naturally toward:
+  - async job execution
+  - metadata export connectors (Collibra/DataHub/Atlas)
+  - lineage and catalog integrations
+
+---
+
+## Closing Thought
+
+This project is less about “how to use FastAPI” and more about **how metadata systems should be built**: deterministic, observable, and safe to run every day.
+
+That mindset is what I bring to real production data platforms.
