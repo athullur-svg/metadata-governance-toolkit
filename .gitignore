@@ -211,3 +211,39 @@ logs/
 .env
 *.sqlite
 
+# env
+.env
+.venv/
+venv/
+
+# python
+__pycache__/
+*.pyc
+
+# runtime
+.metadb/
+*.sqlite
+logs/
+build/
+dist/
+*.egg-info/
+
+# mac
+.DS_Store
+
+# Project runtime artifacts
+.metadb/
+logs/
+*.sqlite
+
+# Secrets / env
+.env
+.envrc
+
+# Local virtual environments
+.venv/
+venv/
+
+# OS noise
+.DS_Store
+
